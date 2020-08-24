@@ -1,12 +1,15 @@
 #
+#import java.util.Scanner
 import sys
 import io
 import geocoder
 import csv
 import pandas as pd
 import numpy as np
+import math
+import ast
+from fastnumbers import fast_real
 data=[]#創一個空的list裝data
-
 #讀檔並放進data 用list來裝dictionary
 with open("a_lvr_land_a.txt", newline='') as csvfile:
     rows = csv.DictReader(csvfile)#讀成dictionary
@@ -36,30 +39,62 @@ for j in range(1,len(data)):#資料第1行是key 第2行為英文 真正資料�
             break
 #        print('aaaaaa')
 #整理要train的資料
-des=np.empty([len(data),2],dtype=float)#經度緯度
-y=np.empty([len(data),1],dtype=float)#價錢
-
-
-
+#des=np.empty([len(data),2],dtype=float)#經度緯度
+#y=np.empty([len(data),1],dtype=float)#價錢
 print('data0')
 print(data[0])
-
+no=[]
 for i in range(len(data)):
-    if 'x' in data[i]:
+    if 'x' in data[i] and '單價元平方公尺' in data[i]:
         continue
     else:
-        data[i].pop(i)
-        print('QQQQQQQQQQQQQQQQQQQQQQ')
-        print(i)
-
+        no.append(i)
+for i in range(len(no)-1,-1,-1):
+    data.pop(no[i])
+fea=2#多少feature
+des=np.empty([len(data),fea],dtype=float)#經度緯度
+pri=np.empty([len(data),1],dtype=float)#價錢
 
 for i in range(len(data)):
-#    if 'x' in data[i]:
-        des[i,0]=data[i]['x']
-        des[i,1]=data[i]['y']
-#    else:
-#        continue
-print('------------------------------------')
-print(data[1].get('z'))
-print(des)
-print(y)
+
+    des[i,0]=data[i]['x']
+    des[i,1]=data[i]['y']
+    pri[i,0]=fast_real(data[i]['單價元平方公尺'])
+#正規化
+meandes=np.mean(des,axis=0)
+stddes=np.std(des,axis=0)
+
+
+for i in range(len(des)):#特徵種類
+    for j in range(len(des[0])):#同特徵所含樣本數
+        if stddes[j]!=0:
+            des[i,j]=(des[i,j]-meandes[j])/stddes[j]
+#print(des)
+destrain=des[:math.floor(len(data)*0.6),:]
+pritrain=pri[:math.floor(len(data)*0.6),:]
+desvalid=des[math.floor(len(data)*0.6):math.floor(len(data)*0.8),:]
+privalid=pri[math.floor(len(data)*0.6):math.floor(len(data)*0.8),:]
+destest=des[math.floor(len(data)*0.8):,:]
+pritest=pri[math.floor(len(data)*0.8):,:]
+#train
+wei=np.zeros([fea,1])
+learningrate=100
+iter=100000
+loss=0
+gradient=0
+adagrad=0
+eps=0.000000001
+for t in range(iter):
+    loss=np.sqrt(np.sum(np.power(np.dot(destrain,wei)-pritrain,2))/fea)
+    if(t%100==0):
+        print('第')
+        print(t)
+        print('次: loss=')
+        print(loss)
+    gradient=2*np.dot(destrain.transpose(),np.dot(destrain,wei)-pritrain)
+    adagrad+=gradient**2
+    wei=wei-learningrate*gradient/np.sqrt(adagrad+eps)
+np.save('weight.npy',wei)
+print(wei)
+
+
