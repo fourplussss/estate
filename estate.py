@@ -21,8 +21,8 @@ print(len(data))
 #把地址丟進open street map
 #if data[1]['土地區段位置建物區段門牌'][1]=='北'
 #    print('A')
-
-for j in range(1,len(data)):#資料第1行是key 第2行為英文 真正資料從第3行開始
+data.pop(0)
+for j in range(0,len(data)):#資料第1行是key 第2行為英文 真正資料從第3行開始
     for i in range(len(data[j]['土地區段位置建物區段門牌'])):#地址字數的迴圈
         print(data[j]['土地區段位置建物區段門牌'][0:len(data[j]['土地區段位置建物區段門牌'])-i])#要丟進去的資料
 #        g = geocoder.osm(data[j]['土地區段位置建物區段門牌'][0:len(data[j]['土地區段位置建物區段門牌'])-i])#丟進去
@@ -41,14 +41,16 @@ for j in range(1,len(data)):#資料第1行是key 第2行為英文 真正資料�
 #整理要train的資料
 #des=np.empty([len(data),2],dtype=float)#經度緯度
 #y=np.empty([len(data),1],dtype=float)#價錢
-print('data0')
-print(data[0])
+print('----------------------------------')
+print(data)
 no=[]
 for i in range(len(data)):
-    if 'x' in data[i] and '單價元平方公尺' in data[i]:
+    if 'x' in data[i] and data[i]['單價元平方公尺']!='':
         continue
+        print('a')
     else:
         no.append(i)
+        print('b')
 for i in range(len(no)-1,-1,-1):
     data.pop(no[i])
 fea=2#多少feature
