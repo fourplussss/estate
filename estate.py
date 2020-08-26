@@ -1,5 +1,5 @@
-#
-#import java.util.Scanner
+#!/usr/local/bin/python3
+
 import sys
 import io
 import geocoder
@@ -9,94 +9,95 @@ import numpy as np
 import math
 import ast
 from fastnumbers import fast_real
-data=[]#創一個空的list裝data
-#讀檔並放進data 用list來裝dictionary
-with open("a_lvr_land_a.txt", newline='') as csvfile:
-    rows = csv.DictReader(csvfile)#讀成dictionary
-    for row in rows:
-        data.append(row)
-print(len(data))
-#print(data)
-#print(csvfile) 
-#把地址丟進open street map
-#if data[1]['土地區段位置建物區段門牌'][1]=='北'
-#    print('A')
-data.pop(0)
-for j in range(0,len(data)):#資料第1行是key 第2行為英文 真正資料從第3行開始
-    for i in range(len(data[j]['土地區段位置建物區段門牌'])):#地址字數的迴圈
-        print(data[j]['土地區段位置建物區段門牌'][0:len(data[j]['土地區段位置建物區段門牌'])-i])#要丟進去的資料
-#        g = geocoder.osm(data[j]['土地區段位置建物區段門牌'][0:len(data[j]['土地區段位置建物區段門牌'])-i])#丟進去
-#        print(g.osm)#看有沒有東西
-        if data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i] != '號'and data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]!='段'and data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]!='路'and data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]!='巷'and data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]!='街'and data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]!='弄':
-            continue
-        g = geocoder.osm(data[j]['土地區段位置建物區段門牌'][0:len(data[j]['土地區段位置建物區段門牌'])-i])#丟進去
-        print('gggggggggg')
-        if g.osm!=None:#有ㄌ
-            data[j].update(g.osm)#把拿到的資料丟回去原本的資料
-            print(data[j])
-            break
-        if data[j]['土地區段位置建物區段門牌'][len(data[j]['土地區段位置建物區段門牌'])-1-i]is'路':#如果到路還沒有資料 那就不要這筆了
-            break
-#        print('aaaaaa')
-#整理要train的資料
-#des=np.empty([len(data),2],dtype=float)#經度緯度
-#y=np.empty([len(data),1],dtype=float)#價錢
-print('----------------------------------')
-print(data)
-no=[]
-for i in range(len(data)):
-    if 'x' in data[i] and data[i]['單價元平方公尺']!='':
-        continue
-        print('a')
-    else:
-        no.append(i)
-        print('b')
-for i in range(len(no)-1,-1,-1):
-    data.pop(no[i])
-fea=2#多少feature
-des=np.empty([len(data),fea],dtype=float)#經度緯度
-pri=np.empty([len(data),1],dtype=float)#價錢
 
-for i in range(len(data)):
-
-    des[i,0]=data[i]['x']
-    des[i,1]=data[i]['y']
-    pri[i,0]=fast_real(data[i]['單價元平方公尺'])
-#正規化
-meandes=np.mean(des,axis=0)
-stddes=np.std(des,axis=0)
+def main():
+#    pass
 
 
-for i in range(len(des)):#特徵種類
-    for j in range(len(des[0])):#同特徵所含樣本數
-        if stddes[j]!=0:
-            des[i,j]=(des[i,j]-meandes[j])/stddes[j]
-#print(des)
-destrain=des[:math.floor(len(data)*0.6),:]
-pritrain=pri[:math.floor(len(data)*0.6),:]
-desvalid=des[math.floor(len(data)*0.6):math.floor(len(data)*0.8),:]
-privalid=pri[math.floor(len(data)*0.6):math.floor(len(data)*0.8),:]
-destest=des[math.floor(len(data)*0.8):,:]
-pritest=pri[math.floor(len(data)*0.8):,:]
+#! Todo
+#! 1. Refine coding style (No Chinese in code, move code into main function)
+#! 2. Add space before and after assignment operator
+#! 3. Use python3 native logging system to log out debug info
+    data = []
+    with open("a_lvr_land_a.txt", newline='') as csvfile:
+        rows = csv.DictReader(csvfile)#read as dictionary
+        for row in rows:
+            data.append(row)
+    data.pop(0)
+    fea = 2#how manyfeature
+    des = np.empty([len(data),fea],dtype=float)#x,y
+    pri = np.empty([len(data),1],dtype=float)#price
+
+    for j in range(0,len(data)):
+        addr = data[j]['土地區段位置建物區段門牌']
+        #index = {'巷':11,'號':17}
+        for i in range(len(data[j]['土地區段位置建物區段門牌'])):#all the word in addres
+            if addr[len(addr)-1-i] != '號'and addr[len(addr)-1-i]!='段'and addr[len(addr)-1-i]!='路'and addr[len(addr)-1-i]!='巷'and addr[len(addr)-1-i]!='街'and addr[len(addr)-1-i]!='弄':
+                continue
+            g = geocoder.osm(addr[0:len(addr)-i])#find
+            if g.osm:
+                data[j].update(g.osm)#updata the new information
+                print(data[j])
+                break
+    no = []
+
+#    fea = 2#how manyfeature
+#    des = np.empty([len(data),fea],dtype=float)#x,y
+#    pri = np.empty([len(data),1],dtype=float)#price
+    for i in range(len(data)):
+       	if 'x' in data[i] and data[i]['單價元平方公尺']!='':
+           	continue
+           	print('a')
+       	else:
+           	no.append(i)
+           	print('b')
+    for i in range(len(no)-1,-1,-1):
+       	data.pop(no[i])
+#    fea = 2#how manyfeature
+#    des = np.empty([len(data),fea],dtype=float)#x,y
+#    pri = np.empty([len(data),1],dtype=float)#price
+    for i in range(len(data)):
+       	des[i,0]=data[i]['x']
+       	des[i,1]=data[i]['y']
+       	pri[i,0]=fast_real(data[i]['單價元平方公尺'])
+#normalize
+    meandes=np.mean(des,axis=0)
+    stddes=np.std(des,axis=0)
+    for i in range(len(des)):#how many different feature
+        for j in range(len(des[0])):#same feature have how many data
+            if stddes[j]!=0:
+                des[i,j] = (des[i,j]-meandes[j])/stddes[j]
+    destrain = des[:math.floor(len(data)*0.8),:]
+    pritrain = pri[:math.floor(len(data)*0.8),:]
+    desvalid = des[math.floor(len(data)*0.8):math.floor(len(data)*0.8),:]
+    privalid = pri[math.floor(len(data)*0.8):math.floor(len(data)*0.8),:]
+    destest = des[math.floor(len(data)*0.9):,:]
+    pritest = pri[math.floor(len(data)*0.9):,:]
 #train
-wei=np.zeros([fea,1])
-learningrate=100
-iter=100000
-loss=0
-gradient=0
-adagrad=0
-eps=0.000000001
-for t in range(iter):
-    loss=np.sqrt(np.sum(np.power(np.dot(destrain,wei)-pritrain,2))/fea)
-    if(t%100==0):
-        print('第')
-        print(t)
-        print('次: loss=')
-        print(loss)
-    gradient=2*np.dot(destrain.transpose(),np.dot(destrain,wei)-pritrain)
-    adagrad+=gradient**2
-    wei=wei-learningrate*gradient/np.sqrt(adagrad+eps)
-np.save('weight.npy',wei)
-print(wei)
+    wei = np.zeros([fea,1])
+    learningrate = 100
+    iter = 100000
+    loss = 0
+    gradient = 0
+    adagrad = 0
+    eps = 0.000000001
+    for t in range(iter):
+        loss = np.sqrt(np.sum(np.power(np.dot(destrain,wei)-pritrain,2))/fea)
+        if(t%100==0):
+            print('第')
+            print(t)
+            print('次: loss=')
+            print(loss)
+    gradient = 2*np.dot(destrain.transpose(),np.dot(destrain,wei)-pritrain)
+    adagrad += gradient**2
+    wei = wei-learningrate*gradient/np.sqrt(adagrad+eps)
+    np.save('weight.npy',wei)
+    print(wei)
 
+
+
+
+
+if __name__ == "__main__":
+	main()
 
