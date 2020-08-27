@@ -93,9 +93,10 @@ def main():
     wei = wei-learningrate*gradient/np.sqrt(adagrad+eps)
     np.save('weight.npy',wei)
     print(wei)
-
-
-
+#test
+    acc=(privalid-np.dot(desvalid,wei)/privalid)
+    print('valid準確率為')
+    print(acc)
 
 
 if __name__ == "__main__":
